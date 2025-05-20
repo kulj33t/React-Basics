@@ -1,83 +1,118 @@
-import React, { useEffect, useState } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
+// ThreeBackground.tsx
+import React, { useRef, useState, useEffect, useCallback } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import * as THREE from 'three';
 
-const ThreeBackground = () => {
-  const [starPositions, setStarPositions] = useState<any[]>([]);
+type FireflyProps = {
+  position: THREE.Vector3;
+  size: number;
+  velocity: number;
+  angle: number;
+};
 
-  useEffect(() => {
-    const generateStarPositions = () => {
-      const positions = [];
-      for (let i = 0; i < 200; i++) {
-        // Keep the z position constant to make the stars move only in the xy-plane
-        positions.push({
-          x: Math.random() * 50 - 25,
-          y: Math.random() * 50 - 25,
-          z: 0, // All stars are on the same plane (z = 0)
-          direction: {
-            x: (Math.random() - 0.5) * 0.02, // Random movement along x
-            y: (Math.random() - 0.5) * 0.02, // Random movement along y
-            z: 0, // No movement in z-axis
-          }
-        });
-      }
-      return positions;
-    };
+const Firefly: React.FC<{ firefly: FireflyProps }> = ({ firefly }) => {
+  const ref = useRef<THREE.Points>(null);
 
-    setStarPositions(generateStarPositions());
+  useFrame(() => {
+    firefly.position.x += firefly.velocity * Math.cos(firefly.angle);
+    firefly.position.y += firefly.velocity * Math.sin(firefly.angle);
+    firefly.angle += (Math.random() * 20 - 10) * (Math.PI / 180);
 
-    const animateStars = () => {
-      setStarPositions((prevPositions) => {
-        return prevPositions.map((star) => {
-          let newX = star.x + star.direction.x;
-          let newY = star.y + star.direction.y;
-
-          // Check if the star is out of bounds and reverse direction if necessary
-          if (newX > 25 || newX < -25) {
-            star.direction.x = -star.direction.x; // Reverse direction on x-axis
-            newX = star.x + star.direction.x;
-          }
-          if (newY > 25 || newY < -25) {
-            star.direction.y = -star.direction.y; // Reverse direction on y-axis
-            newY = star.y + star.direction.y;
-          }
-
-          return {
-            ...star,
-            x: newX,
-            y: newY,
-            z: 0, // Keep z position constant
-          };
-        });
-      });
-      requestAnimationFrame(animateStars);
-    };
-
-    animateStars();
-  }, []);
+    if (ref.current) {
+      ref.current.position.copy(firefly.position);
+    }
+  });
 
   return (
-    <Canvas
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        zIndex: -1,
-      }}
-      camera={{ position: [0, 0, 30], fov: 75 }}
-    >
-      <ambientLight intensity={0.8} />
-      <pointLight position={[10, 10, 10]} />
-      {starPositions.map((star, index) => (
-        <mesh key={index} position={[star.x, star.y, star.z]}>
-          <sphereGeometry args={[0.1, 5, 5]} />
-          <meshBasicMaterial color={'white'} />
-        </mesh>
+    <points ref={ref}>
+      <bufferGeometry>
+        <bufferAttribute
+          attach="attributes-position"
+          count={1}
+          array={new Float32Array([0, 0, 0])}
+          itemSize={3}
+        />
+      </bufferGeometry>
+      <pointsMaterial
+        color={0xfddba3}
+        size={firefly.size}
+        transparent
+        opacity={0.8}
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+      />
+    </points>
+  );
+};
+
+const FireflyField: React.FC = () => {
+  const [fireflies, setFireflies] = useState<FireflyProps[]>([]);
+
+  const createFirefly = useCallback(() => {
+    const size = Math.random() * 2;
+    const position = new THREE.Vector3(
+      Math.random() * window.innerWidth - window.innerWidth / 2,
+      Math.random() * window.innerHeight - window.innerHeight / 2,
+      Math.random() * 200 - 100
+    );
+
+    return {
+      position,
+      size,
+      velocity: (size * size) / 4,
+      angle: Math.random() * 2 * Math.PI,
+    };
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFireflies((prev) => {
+        const updated = prev
+          .map((f) => {
+            const newX = f.position.x + f.velocity * Math.cos(f.angle);
+            const newY = f.position.y + f.velocity * Math.sin(f.angle);
+            const isOut =
+              newX < -window.innerWidth / 2 ||
+              newX > window.innerWidth / 2 ||
+              newY < -window.innerHeight / 2 ||
+              newY > window.innerHeight / 2;
+
+            return isOut ? null : f;
+          })
+          .filter(Boolean) as FireflyProps[];
+
+        if (updated.length < 100) {
+          for (let i = 0; i < 5; i++) updated.push(createFirefly());
+        }
+
+        return updated;
+      });
+    }, 1000 / 60);
+
+    return () => clearInterval(interval);
+  }, [createFirefly]);
+
+  return (
+    <>
+      {fireflies.map((f, i) => (
+        <Firefly key={i} firefly={f} />
       ))}
-      <OrbitControls enableZoom={false} />
-    </Canvas>
+    </>
+  );
+};
+
+const ThreeBackground: React.FC = () => {
+  return (
+    <div style={{ position: 'absolute', width: '100%', height: '100%', zIndex: -1 }}>
+      <Canvas
+        camera={{ position: [0, 0, 400], fov: 75 }}
+        gl={{ alpha: true }}
+      >
+        <color attach="background" args={['#1e1e1e']} />
+        <ambientLight intensity={0.5} />
+        <FireflyField />
+      </Canvas>
+    </div>
   );
 };
 
