@@ -30,7 +30,6 @@ function App() {
   return (
     <div className="app-container">
       <div className="content">
-        <h1>My Toggle View Component</h1>
         <ToggleView />
       </div>
     </div>
