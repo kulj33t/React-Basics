@@ -1,0 +1,57 @@
+/* General body styling */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  margin: 0;
+  padding: 0;
+}
+
+/* Title Styling */
+h1 {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 2rem;
+  color: #333;
+}
+
+/* Container for the Toggle View */
+.toggle-view {
+  transition: all 0.3s ease;
+  padding: 20px;
+  border: 1px solid #ccc;
+  width: 200px;  /* Initial width when collapsed */
+  height: 100px; /* Initial height when collapsed */
+  overflow: hidden;
+  margin: 50px auto;
+  text-align: center;
+  background-color: #fff;
+}
+
+/* Expanded view styles */
+.toggle-view.expanded {
+  width: 400px;
+  height: 300px;
+}
+
+/* Heading style */
+.toggle-view h2 {
+  font-size: 1.5rem;
+  color: #333;
+}
+
+/* Button styling */
+.toggle-view button {
+  padding: 10px 15px;
+  margin-top: 20px;
+  font-size: 1rem;
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.toggle-view button:hover {
+  background-color: #0056b3;
+}
