@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import './App.css';
 
 const ToggleView = () => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -8,18 +9,7 @@ const ToggleView = () => {
   };
 
   return (
-    <div
-      style={{
-        transition: 'all 0.3s ease',
-        padding: '20px',
-        border: '1px solid #ccc',
-        width: isExpanded ? '400px' : '200px',
-        height: isExpanded ? '300px' : '100px',
-        overflow: 'hidden',
-        margin: '50px auto',
-        textAlign: 'center',
-      }}
-    >
+    <div className={`toggle-view ${isExpanded ? 'expanded' : ''}`}>
       <h2>{isExpanded ? 'Details View' : 'Simple View'}</h2>
 
       {isExpanded && (
@@ -38,11 +28,11 @@ const ToggleView = () => {
 
 function App() {
   return (
-    <div>
-      <h1 style={{ textAlign: 'center', marginTop: '20px' }}>
-        My Toggle View Component
-      </h1>
-      <ToggleView />
+    <div className="app-container">
+      <div className="content">
+        <h1>My Toggle View Component</h1>
+        <ToggleView />
+      </div>
     </div>
   );
 }
